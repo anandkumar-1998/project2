@@ -1,11 +1,14 @@
 "use client";
 import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
 import React from "react";
-import { db } from "./firebaseConfig";
+import { db, storage } from "./firebaseConfig";
+import { getDownloadURL, list, listAll, ref } from "firebase/storage";
 import Datatable from "@/components/Datatable";
+import Image from "next/image";
 const GetForm = () => {
   let count = 0;
-  let [upDoc, setUpDoc] = React.useState("")
+  let [imageList, setImageList] = React.useState([]);
+  let [upDoc, setUpDoc] = React.useState("");
   let collectionDb = collection(db, "data");
   const [data, setData] = React.useState([]);
   const [edata, setEdata] = React.useState({
@@ -34,13 +37,22 @@ const GetForm = () => {
   let updateData = async (current) => {
     dataRef.current.click();
     console.log(current);
-    setUpDoc(doc(db, "data", current.id))
+    setUpDoc(doc(db, "data", current.id));
     setEdata(current);
   };
 
+  let getImage = async () => {
+    const imgRef = ref(storage, "images/");
+    let img = await listAll(imgRef);
+    img.items.forEach(async (e) => {
+      let url = await getDownloadURL(e);
+      console.log(url);
+      setImageList((pre) => [...pre, url]);
+    });
+  };
   let handleClick = async () => {
-    await updateDoc(upDoc, edata)
-    await getData()
+    await updateDoc(upDoc, edata);
+    await getData();
     refClose.current.click();
   };
   let handleChange = (e) => {
@@ -49,6 +61,7 @@ const GetForm = () => {
   };
   React.useEffect(() => {
     getData();
+    getImage();
   }, []);
   return (
     <div>
@@ -89,7 +102,21 @@ const GetForm = () => {
           )}
         </tbody>
       </table>
-
+      {/* image value */}
+      <div className="row">
+        {imageList.length == 0
+          ? 0
+          : imageList.map((e, key) => {
+              return (
+                <div key={key} className="col">
+                  <div className="card" style={{ width: "18rem" }}>
+                    {/* <img src={e} className="card-img-top" alt="..." /> */}
+                    <Image src={e} className="card-img-top" width="300" height="200" alt="No image"/>
+                  </div>
+                </div>
+              );
+            })}
+      </div>
       {/* <!-- Modal --> */}
       <div
         className="modal fade"
@@ -120,7 +147,9 @@ const GetForm = () => {
                   name="name"
                   className="form-control"
                   id="floatingInput"
-                  onChange={(e)=>{handleChange(e)}}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
                 />
                 <label htmlFor="floatingInput">Name</label>
               </div>
@@ -131,7 +160,9 @@ const GetForm = () => {
                   name="email"
                   className="form-control"
                   id="floatingInput"
-                  onChange={(e)=>{handleChange(e)}}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
                 />
                 <label htmlFor="floatingInput">Email</label>
               </div>
@@ -142,7 +173,9 @@ const GetForm = () => {
                   name="password"
                   className="form-control"
                   id="floatingInput"
-                  onChange={(e)=>{handleChange(e)}}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
                 />
                 <label htmlFor="floatingInput">Password</label>
               </div>
@@ -153,7 +186,9 @@ const GetForm = () => {
                   name="city"
                   className="form-control"
                   id="floatingInput"
-                  onChange={(e)=>{handleChange(e)}}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
                 />
 
                 <label htmlFor="floatingInput">City</label>
@@ -165,7 +200,9 @@ const GetForm = () => {
                   name="address"
                   className="form-control"
                   id="floatingInput"
-                  onChange={(e)=>{handleChange(e)}}
+                  onChange={(e) => {
+                    handleChange(e);
+                  }}
                 />
                 <label htmlFor="floatingInput">Address</label>
               </div>
@@ -179,7 +216,13 @@ const GetForm = () => {
               >
                 Close
               </button>
-              <button type="button" className="btn btn-primary" onClick={()=>{handleClick()}}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  handleClick();
+                }}
+              >
                 Save changes
               </button>
             </div>
